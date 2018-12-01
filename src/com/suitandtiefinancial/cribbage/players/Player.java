@@ -9,6 +9,8 @@ public interface Player {
 	public void drawCard(Card c);
 	public void revealCut(Card c);
 	public void oponnentPegged(Card c);
+	public void opponentScored(int point);
+	public void youScored(int point);
 	
 	public Card getPeg();
 	public List<Card> getDiscard();
