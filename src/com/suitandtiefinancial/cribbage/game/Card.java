@@ -1,6 +1,6 @@
 package com.suitandtiefinancial.cribbage.game;
 
-public class Card {
+public class Card implements Comparable<Card>{
 	private final Rank rank;
 	private final Suit suit;
 	
@@ -19,5 +19,24 @@ public class Card {
 	
 	public int getValue() {
 		return rank.getValue();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == null) {
+			return false;
+		}
+		
+		if(!(o instanceof Card)) {
+			return false;
+		}
+		Card c = (Card) o;
+		
+		return c.rank == this.rank && c.suit == this.suit;
+	}
+
+	@Override
+	public int compareTo(Card c) {
+		return this.rank.compareTo(c.rank);
 	}
 }
