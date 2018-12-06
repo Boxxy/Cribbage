@@ -28,4 +28,8 @@ public class Deck {
 	public int getSize() {
 		return deck.size();
 	}
+
+	public void addAll(List<Card> cards) {
+		deck.addAll(cards);
+	}
 }

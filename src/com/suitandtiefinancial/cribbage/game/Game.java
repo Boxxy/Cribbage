@@ -207,6 +207,8 @@ public class Game {
 		}
 		
 		upToPeg = calledGo; //Whoever called peg is going first next sequence
+		pegOld.addAll(pegCurrent);
+		pegCurrent.clear();
 		return false;
 	}
 
@@ -256,6 +258,28 @@ public class Game {
 					+ " which makes the peg go over " + PEGGING_LIMIT);
 		}
 		return c;
+	}
+
+	private boolean scorePositions(Positions p) {
+		int score = ScoringUtility.scoreHand(players.get(p).hand, turnUp, false);
+		return score(p, score);
+	}
+
+	private boolean scoreCrib() {
+		int score = ScoringUtility.scoreHand(players.get(Positions.DEALER).hand, turnUp, false);
+		return score(Positions.DEALER, score);
+	}
+
+	private void cleanup() {
+		// TODO Auto-generated method stub
+		pegCurrent.clear();
+		pegOld.clear();
+		deck.addAll(crib);
+		crib.clear();
+		for(Position p : players.values()) {
+			deck.addAll(p.hand);
+			p.hand.clear();
+		}
 	}
 
 }
