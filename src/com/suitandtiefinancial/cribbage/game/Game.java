@@ -31,6 +31,7 @@ public class Game {
 	EnumMap<Positions, Position> players;
 
 	Positions upToPeg;
+	private final Player firstPlayer;
 
 	private enum Positions {
 		DEALER, PONE;
@@ -49,7 +50,6 @@ public class Game {
 		private final List<Card> hand;
 		private final List<Card> peggingHand;
 		int score;
-		boolean calledGo = false;
 
 		private Position(Player player) {
 			this.player = player;
@@ -59,7 +59,7 @@ public class Game {
 		}
 
 		private boolean score(int points) {
-			score++;
+			score+=points;
 			if (score > POINTS_TO_WIN) {
 				return true;
 			}
@@ -77,6 +77,7 @@ public class Game {
 		crib = new LinkedList<Card>();
 		pegCurrent = new LinkedList<Card>();
 		pegOld = new LinkedList<Card>();
+		this.firstPlayer = firstPlayer;
 	}
 
 	public boolean doRound() {
@@ -151,6 +152,7 @@ public class Game {
 						"Player " + p.player + " tried to discard a " + c + " when there hand was " + p.hand);
 			}
 			p.hand.remove(c);
+			p.peggingHand.remove(c);
 			crib.add(c);
 		}
 	}
@@ -169,6 +171,9 @@ public class Game {
 	}
 
 	private boolean score(Positions p, int points) {
+		if(points == 0) {
+			return false;
+		}
 		players.get(p).player.youScored(points);
 		players.get(p.getOpponent()).player.opponentScored(points);
 		return players.get(p).score(points);
@@ -176,7 +181,7 @@ public class Game {
 
 	private boolean peg() {
 		upToPeg = Positions.PONE;
-		while (pegCurrent.size() + pegOld.size() < PLAYING_HAND_SIZE * players.values().size()) {
+		while (pegOld.size() < (PLAYING_HAND_SIZE * players.values().size())) {
 			if (doPeggingSequence()) {
 				return true;
 			}
@@ -185,16 +190,13 @@ public class Game {
 	}
 
 	private boolean doPeggingSequence() {
-		for (Position p : players.values()) {
-			p.calledGo = false;
-		}
 		Positions calledGo = null;
-		while (neitherPlayerHasCalledGo()) {
+		while (calledGo == null) {
 			if (canPeg(upToPeg)) {
 				pegOneCard(upToPeg);
+				upToPeg = upToPeg.getOpponent();
 			} else {
 				calledGo = upToPeg;
-				players.get(upToPeg).calledGo = true;
 				if (score(upToPeg.getOpponent(), 1)) {
 					return true;
 				}
@@ -209,6 +211,7 @@ public class Game {
 		upToPeg = calledGo; //Whoever called peg is going first next sequence
 		pegOld.addAll(pegCurrent);
 		pegCurrent.clear();
+		currentPegginTotal = 0;
 		return false;
 	}
 
@@ -224,16 +227,12 @@ public class Game {
 		return false;
 	}
 
-	private boolean neitherPlayerHasCalledGo() {
-		return !players.get(Positions.PONE).calledGo && !players.get(Positions.DEALER).calledGo;
-	}
-
 	private boolean canPeg(Positions p) {
 		List<Card> hand = players.get(p).peggingHand;
 		if(hand.size() == 0) {
 			return false;
 		}
-		return hand.get(0).getValue() + currentPegginTotal <= PEGGING_LIMIT;
+		return (hand.get(0).getValue() + currentPegginTotal) <= PEGGING_LIMIT;
 	}
 
 	private Card getPegCardFromPlayer(Positions p) {
@@ -266,7 +265,7 @@ public class Game {
 	}
 
 	private boolean scoreCrib() {
-		int score = ScoringUtility.scoreHand(players.get(Positions.DEALER).hand, turnUp, false);
+		int score = ScoringUtility.scoreHand(crib, turnUp, false);
 		return score(Positions.DEALER, score);
 	}
 
@@ -275,11 +274,21 @@ public class Game {
 		pegCurrent.clear();
 		pegOld.clear();
 		deck.addAll(crib);
+		deck.add(turnUp);
 		crib.clear();
 		for(Position p : players.values()) {
 			deck.addAll(p.hand);
 			p.hand.clear();
 		}
+	}
+	
+	public boolean didFirstPlayerWin() {
+		for(Position p : players.values()) {
+			if(p.score >= POINTS_TO_WIN) {
+				return p.player == firstPlayer;
+			}
+		}
+		throw new IllegalStateException(); 
 	}
 
 }

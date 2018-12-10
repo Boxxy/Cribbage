@@ -32,4 +32,8 @@ public class Deck {
 	public void addAll(List<Card> cards) {
 		deck.addAll(cards);
 	}
+
+	public void add(Card card) {
+		deck.add(card);
+	}
 }
